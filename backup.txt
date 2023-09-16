@@ -1,0 +1,58 @@
+import socket
+import os
+
+def handle_request(client_socket):
+    client_socket.settimeout(20) # timeout de 20 segundos
+    request_data = client_socket.recv(1024)
+    if not request_data:
+        return
+
+    request_text = request_data.decode('utf-8')
+
+    if not request_text.startswith('GET'):
+        response = "HTTP/1.1 501 Not Implemented\r\n\r\nMethod Not Implemented"
+        client_socket.send(response.encode())
+        return
+
+    try:
+        path = request_text.split(' ')[1]
+    except IndexError:
+        response = "HTTP/1.1 400 Bad Request\r\n\r\nBad Request"
+        client_socket.send(response.encode())
+        return
+
+    file_path = os.path.join(os.getcwd(), path.lstrip('/'))
+
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        # Se o arquivo não for encontrado, ler o conteúdo de NotFound.html
+        not_found_content = b""
+        not_found_file_path = os.path.join(os.getcwd(), 'NotFound.html')
+        if os.path.exists(not_found_file_path):
+            with open(not_found_file_path, 'rb') as not_found_file:
+                not_found_content = not_found_file.read()
+
+        # Enviar a resposta com o conteúdo de NotFound.html
+        response = f"HTTP/1.1 404 Not Found\r\nContent-Length: {len(not_found_content)}\r\n\r\n"
+        client_socket.send(response.encode() + not_found_content)
+        return
+
+    with open(file_path, 'rb') as file:
+        content = file.read()
+        response = f"HTTP/1.1 200 OK\r\nContent-Length: {len(content)}\r\n\r\n"
+        client_socket.send(response.encode() + content)
+
+def main():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('127.0.0.1', 8080))
+    server_socket.listen(5)
+
+    print("Servidor HTTP está ouvindo na porta 8080...")
+
+    while True:
+        client_socket, client_address = server_socket.accept()
+        print(f"Conexão de {client_address}")
+        handle_request(client_socket)
+        client_socket.close()
+
+if __name__ == "__main__":
+    main()

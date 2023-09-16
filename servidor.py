@@ -15,7 +15,7 @@ log_lock = threading.Lock()
 def handle_client(client_socket, base_dir):
     try:
         # timeout de 20 segundos
-        # client_socket.settimeout(20)  
+        client_socket.settimeout(20)  
 
         # Receber os dados da requisição
         request_data = client_socket.recv(1024)

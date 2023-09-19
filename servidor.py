@@ -98,10 +98,10 @@ def log_request(client_socket, request_text, status, log_file):
 
     # Obter o endereço IP do cliente (que é o destino que o socket está se comunicando)
     client_ip = client_socket.getpeername()[0]
-
-
+    
+    request = request_text.split('\n')[0]
     # Formatar a entrada de log
-    log_entry = f"{timestamp} - {client_ip} - [{status}] -{request_text}"
+    log_entry = f"{timestamp} - {client_ip} - [{status}] -{request}"
 
     # Bloquear o acesso ao arquivo de log para evitar problemas de requisicoes ao mesmo tempo
     with log_lock:
@@ -111,9 +111,9 @@ def log_request(client_socket, request_text, status, log_file):
 
 def main():
     # Parsear os argumentos da linha de comando
-    parser = argparse.ArgumentParser(description='Servidor HTTP simples')
+    parser = argparse.ArgumentParser()
     # Argumento obrigatório: pasta/diretório base dos arquivos a serem servidos
-    parser.add_argument('base_dir', help='Pasta/diretório base dos arquivos a serem servidos')
+    parser.add_argument('base_dir')
     # Argumento opcional: porta TCP onde o servidor vai ouvir (padrão: 8080)
     args = parser.parse_args()
 
